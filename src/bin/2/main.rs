@@ -56,22 +56,6 @@ struct Game {
 }
 
 impl Game {
-    fn from_str(string: &str) -> Option<Self> {
-        let mut data = string.split(" ").filter_map(Play::from_str);
-
-        Some(Self {
-            first_play: data.next()?,
-            second_play: data.next()?,
-        })
-    }
-
-    fn with_result(first_play: Play, result: GameResult) -> Self {
-        Self {
-            second_play: first_play.next_for_result(&result),
-            first_play,
-        }
-    }
-
     fn evaluate(self) -> i32 {
         use GameResult::*;
         use Play::*;
@@ -87,28 +71,37 @@ impl Game {
 }
 
 fn main() {
-    let input = include_str!("./input.txt");
+    let lines = include_str!("./input.txt")
+        .lines()
+        .map(|line| line.split(" "));
 
     println!(
         "Part A Score: {}",
-        input
-            .lines()
-            .flat_map(|line| Game::from_str(line))
+        lines
+            .clone()
+            .flat_map(|chars| {
+                let mut data = chars.filter_map(Play::from_str);
+
+                Some(Game {
+                    first_play: data.next()?,
+                    second_play: data.next()?,
+                })
+            })
             .map(Game::evaluate)
             .sum::<i32>()
     );
 
     println!(
         "Part B Score: {}",
-        input
-            .lines()
-            .flat_map(|line| {
-                let mut chars = line.split(" ");
+        lines
+            .flat_map(|mut chars| {
+                let desired_result = chars.next().and_then(GameResult::from_str)?;
+                let first_play = chars.next().and_then(Play::from_str)?;
 
-                Some(Game::with_result(
-                    chars.next().and_then(Play::from_str)?,
-                    chars.next().and_then(GameResult::from_str)?,
-                ))
+                Some(Game {
+                    second_play: first_play.next_for_result(&desired_result),
+                    first_play,
+                })
             })
             .map(Game::evaluate)
             .sum::<i32>()
