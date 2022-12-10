@@ -73,18 +73,16 @@ impl Game {
 fn main() {
     let lines = include_str!("./input.txt")
         .lines()
-        .map(|line| line.split(" "));
+        .flat_map(|line| line.split_once(" "));
 
     println!(
         "Part A Score: {}",
         lines
             .clone()
-            .flat_map(|chars| {
-                let mut data = chars.filter_map(Play::from_str);
-
+            .flat_map(|(first_play, second_play)| {
                 Some(Game {
-                    first_play: data.next()?,
-                    second_play: data.next()?,
+                    first_play: Play::from_str(first_play)?,
+                    second_play: Play::from_str(second_play)?,
                 })
             })
             .map(Game::evaluate)
@@ -94,9 +92,9 @@ fn main() {
     println!(
         "Part B Score: {}",
         lines
-            .flat_map(|mut chars| {
-                let desired_result = chars.next().and_then(GameResult::from_str)?;
-                let first_play = chars.next().and_then(Play::from_str)?;
+            .flat_map(|(first_play, desired_result)| {
+                let first_play = Play::from_str(first_play)?;
+                let desired_result = GameResult::from_str(desired_result)?;
 
                 Some(Game {
                     second_play: first_play.next_for_result(&desired_result),
